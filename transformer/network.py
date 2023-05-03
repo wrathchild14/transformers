@@ -50,10 +50,12 @@ class ScaledDotProductAttention(nn.Module):
 
     def forward(self, q, k, v):
         # length = number of input tokens
-        batch_size, num_heads, length, num_neuron = k.size()
-        # TODO: Implement the scaled dot product attention as described in
-        # the Attention is all you need paper in Equation 1
-        pass
+        num_neuron = k.size(3)
+        scores = q @ k.transpose(-1, -2) / np.sqrt(num_neuron)
+        scores = self.mask_opt(scores)
+        attention_weights = self.softmax(scores)
+        output = attention_weights @ v
+        return output
 
 
 class MultiHeadAttention(nn.Module):
@@ -62,8 +64,13 @@ class MultiHeadAttention(nn.Module):
         self.n_head = n_head
         self.num_neuron = num_neuron
 
-        # TODO: Initialize the ScaledDotProductAttention and other
-        # necessary components.
+        self.sdpa = ScaledDotProductAttention(max_len)
+
+        self.w_q = nn.Linear(dim_model, n_head * num_neuron)
+        self.w_k = nn.Linear(dim_model, n_head * num_neuron)
+        self.w_v = nn.Linear(dim_model, n_head * num_neuron)
+
+        self.linear = nn.Linear(n_head * num_neuron, dim_model)
 
     def split(self, tensor):
         batch_size, length, total_dim = tensor.size()
@@ -79,9 +86,16 @@ class MultiHeadAttention(nn.Module):
         return concat_tensor
 
     def forward(self, q, k, v):
-        # TODO: Implement the Masked Multi-head attention module as described in the
-        # Attention is all you need paper in Figure 1 and Section 3.2.2.
-        pass
+        batch_size = q.size(0)
+
+        q = self.w_q(q).view(batch_size, -1, self.n_head, self.num_neuron).transpose(1, 2)
+        k = self.w_k(k).view(batch_size, -1, self.n_head, self.num_neuron).transpose(1, 2)
+        v = self.w_v(v).view(batch_size, -1, self.n_head, self.num_neuron).transpose(1, 2)
+        x = self.sdpa(q, k, v)
+        x = self.concat(x)
+        x = self.linear(x)
+
+        return x
 
 
 class PositionFeedForwardNet(nn.Module):
