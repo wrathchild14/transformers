@@ -57,7 +57,7 @@ for epoch in range(epochs):
         print("Top-K sampling")
         for sample_text in sample_texts:
             sample_encoding = train_dataset.encode_text(sample_text)
-            sample_input = Variable(sample_encoding).cuda().unsqueeze(0).long()
+            sample_input = sample_encoding.cuda().unsqueeze(0).long()
 
             # out_test= greedy_sampling_iter_transformer(model, sample_input, 400, chunk_len, output_token)[0]
             out_test = topk_sampling_iter_transformer(model, sample_input, 400, chunk_len, output_token)[0]
@@ -69,7 +69,7 @@ for epoch in range(epochs):
 ''' Text sampling
 sample_text = "Here's to my love! O true apothecary! Thy drugs are quick."
 sample_encoding = train_dataset.encode_text(sample_text)
-sample_input = Variable(sample_encoding).cuda().unsqueeze(0).long()
+sample_input = sample_encoding.cuda().unsqueeze(0).long()
 
 #out_test= greedy_sampling_iter_transformer(model, sample_input, 400, chunk_len, output_token)[0]
 out_test= topk_sampling_iter_transformer(model, sample_input, 400, chunk_len, output_token)[0]
