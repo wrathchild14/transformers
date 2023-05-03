@@ -7,6 +7,8 @@ import torch.optim as optim
 from lstm_network import LSTMSimple
 from utils import LSTMDataset, topk_sampling_lstm, greedy_sampling_lstm
 
+batch_size = 256
+chunk_len = 128
 model_name = "LSTM"
 train_dataset = LSTMDataset(chunk_len=chunk_len)
 trainloader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size, num_workers=0)
