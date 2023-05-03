@@ -4,11 +4,9 @@ import torch
 from tqdm import tqdm
 import torch.optim as optim
 
-from lstm.lstm_network import LSTMSimple
-from lstm.utils import LSTMDataset, topk_sampling_lstm, greedy_sampling_lstm
+from lstm_network import LSTMSimple
+from utils import LSTMDataset, topk_sampling_lstm, greedy_sampling_lstm
 
-batch_size = 256
-chunk_len = 128
 model_name = "LSTM"
 train_dataset = LSTMDataset(chunk_len=chunk_len)
 trainloader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size, num_workers=0)
@@ -18,7 +16,7 @@ input_dim = train_dataset.n_characters
 hidden_dim = 256
 output_dim = train_dataset.n_characters
 learning_rate = 0.005
-model = LSTMSimple(chunk_len, input_dim, hidden_dim, output_dim, batch_size)
+model = LSTMSimple(input_dim, hidden_dim, output_dim)
 model.train()
 model.cuda()
 
@@ -26,7 +24,7 @@ criterion = torch.nn.CrossEntropyLoss()
 
 optimizer = optim.Adam(model.parameters(), lr=learning_rate)
 
-epochs = 2
+epochs = 30
 
 for epoch in range(epochs):
     with tqdm(total=len(trainloader.dataset), desc='Training - Epoch: ' + str(epoch) + "/" + str(epochs),
@@ -52,7 +50,7 @@ for epoch in range(epochs):
         # Intermediate output
         sample_text = "O Romeo, wherefore art thou"
         inp = train_dataset.char_tensor(sample_text)
-        sample_input = Variable(inp).cuda().unsqueeze(0).float()
+        sample_input = inp.cuda().unsqueeze(0).float()
         out_test = topk_sampling_lstm(model, sample_input, 300)[0]
         out_char_index = torch.argmax(out_test, dim=1).detach().cpu().numpy()
         out_chars = sample_text + "".join([train_dataset.all_characters[i] for i in out_char_index])
