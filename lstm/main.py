@@ -1,5 +1,3 @@
-from tkinter import Variable
-
 import torch
 from tqdm import tqdm
 import torch.optim as optim
